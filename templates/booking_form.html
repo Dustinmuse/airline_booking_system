@@ -1,0 +1,41 @@
+<!DOCTYPE html =>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Flight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class ="booking-form">
+    <header>
+        <h1>Book a Flight</h1>
+        <nav>
+            <ul>
+                <li><a href="/main_menu">Home</a></li>
+                <li><a href="/available_flights">Available Flights</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Enter Flight Information</h2>
+            <form id="booking-form" method="POST" action="/book">
+                <label for="flight_id">Flight ID:</label>
+                <input type="number" id="flight_id" name="flight_id" required>
+                <br>
+                <label for="seat_number">Seat Number:</label>
+                <input type="text" id="seat_number" name="seat_number" required>
+                <br>
+                <button type="submit">Book Flight</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Airline Booking System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

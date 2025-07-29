@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Bookings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
+</head>
+<body class = "view-booking-body">
+    <h1>Your Bookings</h1>
+    <ul id="bookings-list">
+        {% if bookings %}
+            {% for booking in bookings %}
+                <li id="booking-{{ booking[0] }}">
+                    Booking ID: {{ booking[0] }},
+                    Flight Number: {{ booking[1] }},
+                    Seat: {{ booking[2] }},
+                    Date: {{ booking[3] }}
+                </li>
+            {% endfor %}
+        {% else %}
+            <p>No bookings found.</p>
+        {% endif %}
+    </ul>
+    <a href="/main_menu">Back to Home</a>
+</body>
+</html>

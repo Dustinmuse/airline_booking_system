@@ -1,0 +1,304 @@
+/* styles.css */
+
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #0073e6;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+h1, h2, h3 {
+    font-size: 1.5rem;
+}
+
+form {
+    background-color: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 8px;
+    width: 300px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+form input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #005bb5;
+}
+
+footer {
+    background-color: #222;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+}
+
+.signup-form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+.signup-form h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.form-group input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+.submit-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+.login-container {
+    background-color: #ffffff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 400px;
+    margin: 0 auto; /* Center horizontally */
+    position: absolute; /* Use absolute positioning */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center vertically and horizontally */
+}
+
+.login-container h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333333;
+}
+
+.login-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555555;
+    text-align: center;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center; /* Center the input text */
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center; /* Center the button text */
+}
+
+.login-container button:hover {
+    background-color: #0056b3;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    text-align: center; /* Center the back link text */
+    width: 100%; /* Ensure it spans the container width */
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.search-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+.search-section h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px;
+    color: #333333;
+}
+.search-section input {
+    width: 50%;
+    padding: 10px;
+    margin: 0 auto 20px; /* Center horizontally with auto margins */
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center; /* Center the input text */
+    display: block; /* Ensure the input is treated as a block element */
+}
+.booking-form {
+    background: #fff;
+    padding: 0px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+.booking-form h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px;
+    color: #333333;
+}
+.booking-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555555;
+}
+.booking-form input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.passenger-id-display {
+    display: none; 
+    margin-top: 20px; 
+    text-align: center; 
+    background-color: #f0f8ff; 
+    padding: 20px; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.passenger-id-display h3 {
+    color: #4CAF50;
+}
+.passenger-id-display p {
+    font-size: 1.2em;
+    font-weight: bold; 
+    color: #333;
+}
+
+.back-to-home-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.back-to-home-btn:hover {
+    background-color: #0056b3;
+}
+
+.view-booking-body {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    margin: 20px auto; /* Center horizontally */
+}
+.view-booking-body h1 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px;
+    color: #333333;
+}
+.view-booking-body a {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+}
+.view-booking-body a:hover {
+    background-color: #0056b3;
+}

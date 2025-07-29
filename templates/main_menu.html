@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airline Booking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Airline Booking System</h1>
+        <nav>
+            <ul>
+                <li><a href="/booking_form">Book a Flight</a></li>
+                <li><a href="/available_flights">View Available Flights</a></li>
+                <li><a href="/booking/{{ passenger_id }}">View Current & Past Bookings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Explore our services</h2>
+            <p>Book a flight or check available flights now!</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Airline Booking System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

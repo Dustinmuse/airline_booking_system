@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Flights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Available Flights</h1>
+        <nav>
+            <ul>
+                <li><a href="/main_menu">Home</a></li>
+                <li><a href="/booking_form">Book a Flight</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class ="search-section">
+            <h2>Search for Flights</h2>
+            <input type="text" id="flight-search" placeholder="Search Flights..." onkeyup="filterFlights()">
+        </section>
+
+        <br>
+
+        <section>
+            <h3>Flight List</h3>
+            <ul id="flight-list">
+                {% for flight in flights %}
+                    <li>
+                        <br>
+                        <strong>Flight Number:</strong> {{ flight[1] }} <br>
+                        <strong>Airline:</strong> {{ flight[2] }} <br>
+                        <strong>Departure Time:</strong> {{ flight[4] }} <br>
+                        <strong>Arrival Time:</strong> {{ flight[6] }} <br>
+                        <strong>Duration:</strong> {{ flight[7] }} <br>
+                        <strong>Price:</strong> ${{ flight[9] }} <br>
+                        <br>
+                        <hr>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Airline Booking System</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

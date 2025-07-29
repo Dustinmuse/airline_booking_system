@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <form class="signup-form" action="/register" method="POST" onsubmit="return handleSignup(event)">
+        <h2>Sign Up</h2>
+        <div class="form-group">
+            <label for="first-name">First Name</label>
+            <input type="text" id="first-name" name="first_name" required>
+        </div>
+        <div class="form-group">
+            <label for="last-name">Last Name</label>
+            <input type="text" id="last-name" name="last_name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" required>
+        </div>
+        <div class="form-group">
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required>
+        </div>
+        <button type="submit" class="submit-btn">Sign Up</button>
+    </form>
+
+    <div class="passenger-id-display" id="passenger-id-display">
+        <h3>Registration Successful!</h3>
+        <p>Your Passenger ID is: <span id="passenger-id"></span></p>
+        <a href="/main_menu" class="back-to-home-btn">Back to Home</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <a href="/main_menu" class="back-link">Back to Home</a>
+</body>
+</html>
