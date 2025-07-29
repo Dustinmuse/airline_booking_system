@@ -1,57 +1,74 @@
-# Fullstack Airline Booking System
+# Airline Booking System
 
-A web-based airline booking system built with Flask (Python), MySQL, HTML/CSS/JS, and the OpenSky API for live flight data.
+A web-based airline booking system featuring a Flask (Python) backend, PostgreSQL database, and a modern HTML/CSS/JavaScript frontend. Integrates live flight data using the OpenSky API.
 
-## Features
+## Key Features
 
-- User registration and login
+- User registration and login (Flask backend)
 - Book flights and select seats
-- View available flights (live data from OpenSky)
+- View available flights (live data from OpenSky, backend integration)
 - View current and past bookings
-- Responsive and modern UI
+- Responsive UI (HTML/CSS/JavaScript)
+- RESTful API endpoints
 
-## Requirements
+## Tech Stack
 
-- Python 3.8+
-- MySQL server
-- pip (Python package manager)
+- **Backend:** Python 3.8+, Flask
+- **Frontend:** HTML, CSS, JavaScript (Jinja2 templates)
+- **Database:** PostgreSQL
+- **External API:** OpenSky Network API
 
-## Setup
+## Project Structure
 
-1. **Clone the repository**  
+- `app.py` - Flask application entry point
+- `templates/` - Jinja2 HTML templates
+- `static/` - Static files (CSS, JS, images)
+- `requirements.txt` - Python dependencies
+- `.env.example` - Environment variable sample
+
+## Setup Instructions
+
+1. **Clone the repository**
    ```
-   git clone <your-repo-url>
-   cd fullstack_airline_booking_system
+   git clone https://github.com/yourusername/airline_booking_system.git
+   cd airline_booking_system
    ```
 
-2. **Install dependencies**  
+2. **Install dependencies**
    ```
    pip install -r requirements.txt
    ```
 
-3. **Configure environment variables**  
-   - Copy `mysql.env.example` to `mysql.env` and fill in your MySQL credentials and secret key.
+3. **Configure environment variables**
+   - Copy `.env.example` to `.env` and update with your info:
+     ```
+     DATABASE_URL=postgresql://username:password@localhost:5432/yourdbname
+     SECRET_KEY=your_secret_key
+     ```
 
-4. **Set up the database**  
-   - Create the database and tables as required by the app (see your schema or migrations).
+4. **Set up the PostgreSQL database**
+   - Make sure PostgreSQL is running and your database is created.
 
-5. **Run the application**  
+5. **Run the backend application**
    ```
    python app.py
    ```
-   The app will be available at `http://127.0.0.1:5000/`.
+   The app will be available at [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
-## Project Structure
+## Live Demo
 
-- `app.py` - Main Flask application
-- `templates/` - HTML templates (Jinja2)
-- `static/css/` - Stylesheets
-- `static/js/` - JavaScript files
-- `requirements.txt` - Python dependencies
+🌐 **Website:** [https://airline-booking-system-klwk.onrender.com](https://airline-booking-system-klwk.onrender.com)
 
-## Notes
+## API Endpoints
 
-- The app fetches live flight data from the [OpenSky Network API](https://opensky-network.org/).
-- Make sure your MySQL server is running and accessible.
-- For development, you may want to use a virtual environment.
+- `/api/flights` - List available flights
+- `/api/book` - Book a flight
+- `/api/login` - User authentication
 
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+*This project uses PostgreSQL for data storage. Make sure to update your `.env` with the correct `DATABASE_URL` and `SECRET_KEY`.*
