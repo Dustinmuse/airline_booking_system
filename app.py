@@ -6,14 +6,20 @@ from datetime import datetime
 import requests
 from flask_sqlalchemy import SQLAlchemy
 
-# Load environment variables from .env file (use locally only)
-# load_dotenv(dotenv_path='c:\\CS418_Python\\fullstack_airline_booking_system\\mysql.env')
+load_dotenv()
+
+
+def normalized_database_url():
+    url = os.getenv('DATABASE_URL')
+    if url and url.startswith('postgres://'):
+        return 'postgresql://' + url[len('postgres://') :]
+    return url
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 
-# Use the DATABASE_URL environment variable for PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = normalized_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -22,6 +28,12 @@ current_time = int(time.time())
 start_time = current_time - 3600
 
 OPEN_SKY_API_URL = f"https://opensky-network.org/api/states/all?begin={start_time}&end={current_time}"
+
+OPEN_SKY_REQUEST_TIMEOUT = (5, 20)
+
+
+def opensky_seed_skipped():
+    return os.getenv('SKIP_OPENSKY_SEED', '').strip().lower() in ('1', 'true', 'yes')
 
 # --- SQLAlchemy Models ---
 class Passenger(db.Model):
@@ -114,8 +126,12 @@ def book_flight():
 
 @app.route('/available_flights')
 def available_flights():
-    # Fetch flight data from OpenSky API
-    response = requests.get(OPEN_SKY_API_URL)
+    try:
+        response = requests.get(
+            OPEN_SKY_API_URL, timeout=OPEN_SKY_REQUEST_TIMEOUT
+        )
+    except requests.RequestException:
+        return 'Error: Unable to reach OpenSky API (timeout or network).', 502
 
     if response.status_code == 200:
         data = response.json()  # Parse the JSON data
@@ -170,11 +186,13 @@ def insert_flights_from_api(flights_data):
 
 
 def get_flights_data():
-    url = OPEN_SKY_API_URL
-    response = requests.get(url)
+    """Fetch OpenSky flight states; callers should catch requests.RequestException."""
+    response = requests.get(
+        OPEN_SKY_API_URL, timeout=OPEN_SKY_REQUEST_TIMEOUT
+    )
 
     if response.status_code != 200:
-        print("Failed to fetch flight data")
+        print('Failed to fetch flight data', flush=True)
         return []
 
     data = response.json()
@@ -191,8 +209,8 @@ def get_flights_data():
         first_seen = flight[4]  # last_contact (best guess for departure)
         last_seen = flight[3]   # time_position (optional guess for arrival)
 
-        departure_time = datetime.fromtimestamp(first_seen).strftime('%Y-%m-%d %H:%M:%S') if first_seen else None
-        arrival_time = datetime.fromtimestamp(last_seen).strftime('%Y-%m-%d %H:%M:%S') if last_seen else None
+        departure_time = datetime.fromtimestamp(first_seen) if first_seen else None
+        arrival_time = datetime.fromtimestamp(last_seen) if last_seen else None
 
         flight_info = {
             "flight_number": callsign,
@@ -233,10 +251,15 @@ def main_menu():
     return render_template('main_menu.html', passenger_id=passenger_id)
 
 
-# Initialize database when app starts
 with app.app_context():
     db.create_all()
-    insert_flights_from_api(get_flights_data())
+    if opensky_seed_skipped():
+        print('OpenSky startup seed skipped (SKIP_OPENSKY_SEED)', flush=True)
+    else:
+        try:
+            insert_flights_from_api(get_flights_data())
+        except requests.RequestException as exc:
+            print(f'OpenSky startup seed skipped: {exc}', flush=True)
 
 if __name__ == "__main__":
     app.run()
