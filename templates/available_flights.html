@@ -27,16 +27,18 @@
 
         <section>
             <h3>Flight List</h3>
+            {% if not flights %}
+                <p>No flights are currently available. Please check back shortly &mdash; flight data is refreshed in the background.</p>
+            {% endif %}
             <ul id="flight-list">
                 {% for flight in flights %}
                     <li>
                         <br>
-                        <strong>Flight Number:</strong> {{ flight[1] }} <br>
-                        <strong>Airline:</strong> {{ flight[2] }} <br>
-                        <strong>Departure Time:</strong> {{ flight[4] }} <br>
-                        <strong>Arrival Time:</strong> {{ flight[6] }} <br>
-                        <strong>Duration:</strong> {{ flight[7] }} <br>
-                        <strong>Price:</strong> ${{ flight[9] }} <br>
+                        <strong>Flight Number:</strong> {{ flight.flight_number or 'UNKNOWN' }} <br>
+                        <strong>Departure Airport:</strong> {{ flight.departure_airport }} <br>
+                        <strong>Arrival Airport:</strong> {{ flight.arrival_airport }} <br>
+                        <strong>Departure Time:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M UTC') if flight.departure_time else 'N/A' }} <br>
+                        <strong>Arrival Time:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M UTC') if flight.arrival_time else 'N/A' }} <br>
                         <br>
                         <hr>
                     </li>

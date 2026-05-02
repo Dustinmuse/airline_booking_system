@@ -3,11 +3,15 @@ services:
     name: airline-booking-system
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --timeout 60 --workers 2 --graceful-timeout 30
     envVars:
       - key: FLASK_ENV
         value: production
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: SKIP_OPENSKY_SEED
         sync: false

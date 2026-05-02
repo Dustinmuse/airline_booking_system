@@ -44,7 +44,32 @@ A web-based airline booking system featuring a Flask (Python) backend, PostgreSQ
      ```
      DATABASE_URL=postgresql://username:password@localhost:5432/yourdbname
      SECRET_KEY=your_secret_key
+     # Optional: set to 1/true/yes to skip the background OpenSky seed at boot
+     SKIP_OPENSKY_SEED=
+     # Optional: shared secret required by POST /admin/refresh_flights via the
+     # X-Admin-Token header. Leave unset to disable the admin endpoint.
+     ADMIN_TOKEN=
      ```
+
+### Flight data and OpenSky
+
+`/available_flights` reads exclusively from the local `flights` table — it never
+calls OpenSky on the request path, so the page stays fast even if the OpenSky
+API is unreachable (which is common from cloud-provider IP ranges).
+
+The `flights` table is populated by:
+
+- A best-effort daemon-thread seed that runs once at app boot. Failures are
+  logged via `app.logger.warning` and never block startup.
+- An admin endpoint to re-seed on demand:
+  ```
+  curl -X POST -H "X-Admin-Token: $ADMIN_TOKEN" \
+       https://your-host/admin/refresh_flights
+  ```
+  Returns `{"ok": true, "inserted": N}` on success.
+
+Set `SKIP_OPENSKY_SEED=1` to disable the boot-time seed entirely (useful for
+local development or when OpenSky is known to be down).
 
 4. **Set up the PostgreSQL database**
    - Make sure PostgreSQL is running and your database is created.

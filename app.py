@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from dotenv import load_dotenv
 import os
 import time
+import threading
 from datetime import datetime
 import requests
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import aliased
 
 load_dotenv()
 
@@ -24,16 +26,53 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-current_time = int(time.time())
-start_time = current_time - 3600
+# (connect_timeout, read_timeout) — kept well under gunicorn's worker timeout so a
+# single attempt cannot starve the worker even if OpenSky is unreachable.
+OPEN_SKY_REQUEST_TIMEOUT = (3, 7)
 
-OPEN_SKY_API_URL = f"https://opensky-network.org/api/states/all?begin={start_time}&end={current_time}"
 
-OPEN_SKY_REQUEST_TIMEOUT = (5, 20)
+def build_opensky_url():
+    """Build the OpenSky URL for the most recent hour. Computed per-call so the
+    time window doesn't go stale in long-running workers."""
+    end = int(time.time())
+    begin = end - 3600
+    return f"https://opensky-network.org/api/states/all?begin={begin}&end={end}"
 
 
 def opensky_seed_skipped():
     return os.getenv('SKIP_OPENSKY_SEED', '').strip().lower() in ('1', 'true', 'yes')
+
+
+def fetch_opensky_states(max_attempts=2):
+    """Fetch raw OpenSky state vectors. Returns the list under data['states'] on
+    success, or None on any failure (network, non-200, JSON decode). Never raises."""
+    url = build_opensky_url()
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = requests.get(url, timeout=OPEN_SKY_REQUEST_TIMEOUT)
+        except requests.RequestException as exc:
+            app.logger.warning(
+                'OpenSky request attempt %d/%d failed: %s',
+                attempt, max_attempts, exc,
+            )
+            continue
+
+        if response.status_code != 200:
+            app.logger.warning(
+                'OpenSky request attempt %d/%d returned HTTP %d',
+                attempt, max_attempts, response.status_code,
+            )
+            continue
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            app.logger.warning('OpenSky response was not valid JSON: %s', exc)
+            return None
+
+        return data.get('states') or []
+
+    return None
 
 # --- SQLAlchemy Models ---
 class Passenger(db.Model):
@@ -126,40 +165,53 @@ def book_flight():
 
 @app.route('/available_flights')
 def available_flights():
-    try:
-        response = requests.get(
-            OPEN_SKY_API_URL, timeout=OPEN_SKY_REQUEST_TIMEOUT
-        )
-    except requests.RequestException:
-        return 'Error: Unable to reach OpenSky API (timeout or network).', 502
+    """Render flights from the local database. The OpenSky network call lives in
+    a background seeder, never on the request path, so this endpoint always
+    responds quickly and never returns 5xx because of upstream issues."""
+    DepartureAirport = aliased(Airport)
+    ArrivalAirport = aliased(Airport)
 
-    if response.status_code == 200:
-        data = response.json()  # Parse the JSON data
-        flights = data['states'][:100]  # Extract and limit to the first 100 flights
+    rows = (
+        db.session.query(Flight, DepartureAirport, ArrivalAirport)
+        .outerjoin(DepartureAirport, Flight.departure_airport == DepartureAirport.airport_id)
+        .outerjoin(ArrivalAirport, Flight.arrival_airport == ArrivalAirport.airport_id)
+        .order_by(Flight.departure_time.desc().nullslast())
+        .limit(100)
+        .all()
+    )
 
-        return render_template('available_flights.html', flights=flights)  # Pass the flight data to the template
-    else:
-        return "Error: Unable to fetch flight data from OpenSky API", 500
+    flights = [
+        {
+            'flight_id': flight.flight_id,
+            'flight_number': flight.flight_number,
+            'departure_airport': dep.airport_code if dep else 'UNKNOWN',
+            'arrival_airport': arr.airport_code if arr else 'UNKNOWN',
+            'departure_time': flight.departure_time,
+            'arrival_time': flight.arrival_time,
+        }
+        for flight, dep, arr in rows
+    ]
+
+    return render_template('available_flights.html', flights=flights)
 
 
 def insert_flights_from_api(flights_data):
-    # Insert airports first (to avoid FK constraint issues)
+    """Insert airports + flights from a list of normalized flight dicts.
+    Returns the number of new Flight rows inserted."""
     airport_codes = set()
     for flight in flights_data:
         airport_codes.add(flight.get("departure_airport", "UNKNOWN")[:10])
         airport_codes.add(flight.get("arrival_airport", "UNKNOWN")[:10])
 
-    # Insert airports if not exist
     for code in airport_codes:
         if not Airport.query.filter_by(airport_code=code).first():
             db.session.add(Airport(airport_code=code))
     db.session.commit()
 
-    # Fetch airport IDs into a dict
     airports = Airport.query.all()
     airport_id_map = {a.airport_code: a.airport_id for a in airports}
 
-    # Insert flights if not exist
+    inserted = 0
     for flight in flights_data:
         dep_code = flight["departure_airport"][:10]
         arr_code = flight["arrival_airport"][:10]
@@ -181,47 +233,67 @@ def insert_flights_from_api(flights_data):
                     departure_time=flight["departure_time"],
                     arrival_time=flight["arrival_time"]
                 ))
+                inserted += 1
     db.session.commit()
-    print("Flights and airports inserted successfully!")
+    return inserted
 
 
 def get_flights_data():
-    """Fetch OpenSky flight states; callers should catch requests.RequestException."""
-    response = requests.get(
-        OPEN_SKY_API_URL, timeout=OPEN_SKY_REQUEST_TIMEOUT
-    )
-
-    if response.status_code != 200:
-        print('Failed to fetch flight data', flush=True)
+    """Fetch + normalize OpenSky flight states. Returns [] on any failure."""
+    states = fetch_opensky_states()
+    if not states:
         return []
 
-    data = response.json()
     flights = []
-    states = data.get("states", [])
-
     for flight in states:
         callsign = flight[1].strip() if flight[1] else "UNKNOWN"
 
-        # Use the raw callsign as the airport code
+        # OpenSky doesn't expose origin/destination airports in /states/all, so
+        # the callsign is the best identifier we have for both ends.
         departure_airport = callsign
         arrival_airport = callsign
 
-        first_seen = flight[4]  # last_contact (best guess for departure)
-        last_seen = flight[3]   # time_position (optional guess for arrival)
+        first_seen = flight[4]  # last_contact
+        last_seen = flight[3]   # time_position
 
         departure_time = datetime.fromtimestamp(first_seen) if first_seen else None
         arrival_time = datetime.fromtimestamp(last_seen) if last_seen else None
 
-        flight_info = {
+        flights.append({
             "flight_number": callsign,
             "departure_airport": departure_airport,
             "arrival_airport": arrival_airport,
             "departure_time": departure_time,
-            "arrival_time": arrival_time
-        }
-        flights.append(flight_info)
+            "arrival_time": arrival_time,
+        })
 
     return flights
+
+
+def seed_flights_from_opensky():
+    """Run the OpenSky → DB pipeline once. Returns inserted count, or -1 on
+    failure. Safe to call from a background thread or an HTTP handler."""
+    try:
+        flights_data = get_flights_data()
+        if not flights_data:
+            app.logger.warning('OpenSky seed: no flight data from API')
+            return 0
+        return insert_flights_from_api(flights_data)
+    except Exception as exc:
+        app.logger.warning('OpenSky seed failed: %s', exc)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return -1
+
+
+def _background_seed():
+    """Wrapper that establishes the Flask app context for the daemon thread."""
+    with app.app_context():
+        inserted = seed_flights_from_opensky()
+        if inserted >= 0:
+            app.logger.info('OpenSky background seed: inserted %d flights', inserted)
 
 
 @app.route('/signup')
@@ -251,15 +323,33 @@ def main_menu():
     return render_template('main_menu.html', passenger_id=passenger_id)
 
 
+@app.route('/admin/refresh_flights', methods=['POST'])
+def admin_refresh_flights():
+    """Manually trigger an OpenSky seed. Guarded by the ADMIN_TOKEN env var
+    matched against the X-Admin-Token request header."""
+    expected_token = os.getenv('ADMIN_TOKEN')
+    if not expected_token:
+        return jsonify({'ok': False, 'error': 'ADMIN_TOKEN not configured'}), 503
+
+    provided = request.headers.get('X-Admin-Token', '')
+    if provided != expected_token:
+        return jsonify({'ok': False, 'error': 'forbidden'}), 403
+
+    inserted = seed_flights_from_opensky()
+    if inserted < 0:
+        return jsonify({'ok': False, 'inserted': 0}), 502
+    return jsonify({'ok': True, 'inserted': inserted})
+
+
 with app.app_context():
     db.create_all()
-    if opensky_seed_skipped():
-        print('OpenSky startup seed skipped (SKIP_OPENSKY_SEED)', flush=True)
-    else:
-        try:
-            insert_flights_from_api(get_flights_data())
-        except requests.RequestException as exc:
-            print(f'OpenSky startup seed skipped: {exc}', flush=True)
+
+if opensky_seed_skipped():
+    app.logger.info('OpenSky startup seed skipped (SKIP_OPENSKY_SEED)')
+else:
+    # Run the initial seed in a daemon thread so a slow or unreachable OpenSky
+    # endpoint can never block worker boot or the first request.
+    threading.Thread(target=_background_seed, daemon=True, name='opensky-seed').start()
 
 if __name__ == "__main__":
     app.run()
