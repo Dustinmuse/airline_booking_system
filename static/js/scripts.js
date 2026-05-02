@@ -35,47 +35,9 @@ function filterFlights() {
     }
 }
 
-// Load available flights from Flask
-function loadAvailableFlights() {
-    const flightList = document.getElementById('flight-list');
-    if (flightList) {
-        fetch('/available_flights')
-            .then(response => response.json())
-            .then(data => {
-                flightList.innerHTML = '';
-                data.flights.forEach(flight => {
-                    const li = document.createElement('li');
-                    li.classList.add('flight');
-                    li.textContent = `Flight ${flight.flight_number} - ${flight.departure_airport} to ${flight.arrival_airport}`;
-                    flightList.appendChild(li);
-                });
-            })
-            .catch(error => console.error('Error fetching flights:', error));
-    }
-}
-
-// Load bookings list via AJAX (optional: implement this route in Flask)
-function loadBookings() {
-    const bookingsList = document.getElementById('bookings-list');
-    if (bookingsList) {
-        fetch('/api/bookings')
-            .then(response => response.json())
-            .then(data => {
-                bookingsList.innerHTML = '';
-                data.bookings.forEach(booking => {
-                    const li = document.createElement('li');
-                    li.textContent = `Booking ID: ${booking.id}, Flight: ${booking.flight_number}`;
-                    bookingsList.appendChild(li);
-                });
-            })
-            .catch(error => console.error('Error fetching bookings:', error));
-    }
-}
-
 // Initialize when the DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    loadAvailableFlights();
-    loadBookings();
+    // Endpoints removed because they don't return JSON
 });
 
 async function handleSignup(event) {
@@ -111,15 +73,4 @@ async function handleSignup(event) {
     }
 }
 
-function validatePassword(password) {
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // At least 8 characters, 1 letter, 1 number
-    return regex.test(password);
-}
-
-document.querySelector('.signup-form').addEventListener('submit', function(event) {
-    const password = document.getElementById('password').value;
-    if (!validatePassword(password)) {
-        alert('Password must be at least 8 characters long and include at least one letter and one number.');
-        event.preventDefault();
-    }
-});
+// Password validation removed as there is no password field.
