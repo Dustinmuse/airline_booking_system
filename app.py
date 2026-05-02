@@ -26,6 +26,15 @@ app.secret_key = os.getenv('SECRET_KEY')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = normalized_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Neon (and most serverless Postgres providers) silently closes idle
+# connections, which leaves stale entries in SQLAlchemy's pool and causes
+# the first request after an idle gap to 500. pool_pre_ping issues a cheap
+# SELECT 1 on checkout so dead connections are transparently replaced, and
+# pool_recycle proactively rotates connections before Neon's idle timeout.
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
 
 db = SQLAlchemy(app)
 
