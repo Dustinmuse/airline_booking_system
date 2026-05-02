@@ -7,22 +7,40 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
 </head>
-<body class = "view-booking-body">
-    <h1>Your Bookings</h1>
-    <ul id="bookings-list">
-        {% if bookings %}
-            {% for booking in bookings %}
-                <li id="booking-{{ booking[0] }}">
-                    Booking ID: {{ booking[0] }},
-                    Flight Number: {{ booking[1] }},
-                    Seat: {{ booking[2] }},
-                    Date: {{ booking[3] }}
-                </li>
-            {% endfor %}
-        {% else %}
-            <p>No bookings found.</p>
-        {% endif %}
-    </ul>
-    <a href="/main_menu">Back to Home</a>
+<body>
+    <header>
+        <h1>Airline Booking System</h1>
+        <nav>
+            <ul>
+                <li><a href="/main_menu">Home</a></li>
+                <li><a href="/booking_form">Book a Flight</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="view-booking-container">
+            <h2>Your Bookings</h2>
+            <ul id="bookings-list">
+                {% if bookings %}
+                    {% for booking in bookings %}
+                        <li id="booking-{{ booking[0].booking_id }}">
+                            <strong>Booking ID:</strong> {{ booking[0].booking_id }} <br>
+                            <strong>Flight Number:</strong> {{ booking[1].flight_number }} <br>
+                            <strong>Seat:</strong> {{ booking[0].seat_number }} <br>
+                            <strong>Date:</strong> {{ booking[0].booking_date.strftime('%Y-%m-%d %H:%M UTC') if booking[0].booking_date else 'N/A' }}
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <p>No bookings found.</p>
+                {% endif %}
+            </ul>
+            <a href="/main_menu" class="btn">Back to Home</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Airline Booking System</p>
+    </footer>
 </body>
 </html>

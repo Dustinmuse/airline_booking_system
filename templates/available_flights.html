@@ -18,12 +18,10 @@
     </header>
 
     <main>
-        <section class ="search-section">
+        <section class="search-section">
             <h2>Search for Flights</h2>
             <input type="text" id="flight-search" placeholder="Search Flights..." onkeyup="filterFlights()">
         </section>
-
-        <br>
 
         <section>
             <h3>Flight List</h3>
@@ -33,7 +31,6 @@
             <ul id="flight-list">
                 {% for flight in flights %}
                     <li>
-                        <br>
                         <strong>Flight Number:</strong> {{ flight.flight_number or 'UNKNOWN' }} <br>
                         <strong>From:</strong>
                         {{ flight.departure_code }}{% if flight.departure_city %} &mdash; {{ flight.departure_city }}{% endif %}{% if flight.departure_name %} ({{ flight.departure_name }}){% endif %}
@@ -42,9 +39,7 @@
                         {{ flight.arrival_code }}{% if flight.arrival_city %} &mdash; {{ flight.arrival_city }}{% endif %}{% if flight.arrival_name %} ({{ flight.arrival_name }}){% endif %}
                         <br>
                         <strong>Departure Time:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M UTC') if flight.departure_time else 'N/A' }} <br>
-                        <strong>Arrival Time:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M UTC') if flight.arrival_time else 'N/A' }} <br>
-                        <br>
-                        <hr>
+                        <strong>Arrival Time:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M UTC') if flight.arrival_time else 'N/A' }}
                     </li>
                 {% endfor %}
             </ul>
