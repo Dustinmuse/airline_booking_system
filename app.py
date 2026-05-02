@@ -41,16 +41,24 @@ OURAIRPORTS_REQUEST_TIMEOUT = (5, 30)
 # seaplane bases, closed airports, and small GA fields are skipped.
 ELIGIBLE_AIRPORT_TYPES = {'large_airport', 'medium_airport'}
 
+# ISO 3166-1 alpha-2 country code to filter airports to. Set to None to
+# include airports from every country in the OurAirports dataset.
+AIRPORT_COUNTRY_FILTER = 'US'
+
 # Airline IATA codes used to build plausible-looking flight numbers for the
-# synthetic schedule. These are real carriers but the schedule itself is fake.
+# synthetic schedule. These are real US carriers but the schedule itself is fake.
 AIRLINE_CODES = [
-    'AA', 'UA', 'DL', 'WN', 'AS', 'B6',  # US
-    'AC', 'WS',                            # Canada
-    'BA', 'VS', 'IB', 'AF', 'KL', 'LH', 'LX', 'AZ', 'TP', 'SK', 'AY',  # Europe
-    'EK', 'QR', 'EY', 'TK', 'SV',          # Middle East
-    'SQ', 'CX', 'JL', 'NH', 'KE', 'OZ', 'TG', 'MH', 'CI',  # Asia
-    'QF', 'NZ',                            # Oceania
-    'LA', 'AM',                            # Latin America
+    'AA',  # American
+    'UA',  # United
+    'DL',  # Delta
+    'WN',  # Southwest
+    'AS',  # Alaska
+    'B6',  # JetBlue
+    'F9',  # Frontier
+    'NK',  # Spirit
+    'G4',  # Allegiant
+    'HA',  # Hawaiian
+    'SY',  # Sun Country
 ]
 
 # Cap on how many flights the synthetic generator will create per run, and the
@@ -171,12 +179,17 @@ def fetch_ourairports_csv(max_attempts=2):
 
 def parse_airports_csv(csv_text):
     """Yield normalized airport dicts from the OurAirports CSV body. Filters
-    to commercial-relevant airports that publish either an IATA or ICAO code."""
+    to commercial-relevant airports that publish either an IATA or ICAO code,
+    optionally restricted to a single country via AIRPORT_COUNTRY_FILTER."""
     reader = csv.DictReader(io.StringIO(csv_text))
     parsed = []
     for row in reader:
         airport_type = (row.get('type') or '').strip()
         if airport_type not in ELIGIBLE_AIRPORT_TYPES:
+            continue
+
+        iso_country = (row.get('iso_country') or '').strip().upper()
+        if AIRPORT_COUNTRY_FILTER and iso_country != AIRPORT_COUNTRY_FILTER:
             continue
 
         iata = (row.get('iata_code') or '').strip().upper()

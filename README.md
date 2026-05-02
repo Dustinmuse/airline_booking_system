@@ -64,12 +64,17 @@ open dataset, which publishes a daily-refreshed CSV of every airport in the
 world (name, city, country, IATA/ICAO codes, lat/lon, type). On boot the app:
 
 1. Downloads `https://davidmegginson.github.io/ourairports-data/airports.csv`.
-2. Filters to large/medium airports that publish an IATA or ICAO code, and
-   upserts them into the `airports` table.
+2. Filters to large/medium airports in the United States (`iso_country == 'US'`)
+   that publish an IATA or ICAO code, and upserts them into the `airports` table.
 3. If the `flights` table has fewer than 50 rows, generates a synthetic
-   schedule of ~200 flights by pairing random airports with realistic flight
-   numbers (real airline IATA prefixes), departure times spread over the next
-   30 days, and durations approximated from the great-circle distance.
+   schedule of ~200 domestic US flights by pairing random US airports with
+   realistic flight numbers (real US airline IATA prefixes — AA, UA, DL, WN,
+   AS, B6, F9, NK, G4, HA, SY), departure times spread over the next 30 days,
+   and durations approximated from the great-circle distance.
+
+To include airports from every country instead of just the US, set
+`AIRPORT_COUNTRY_FILTER = None` in `app.py` (or change the constant to a
+different ISO 3166-1 alpha-2 code, e.g. `'CA'` for Canada).
 
 Note that OurAirports does not publish flight schedules — only airport data.
 The schedule on top is intentionally synthetic so the booking flow has data
