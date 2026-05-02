@@ -13,5 +13,5 @@ services:
         sync: false
       - key: ADMIN_TOKEN
         sync: false
-      - key: SKIP_OPENSKY_SEED
+      - key: SKIP_DATA_SEED
         sync: false

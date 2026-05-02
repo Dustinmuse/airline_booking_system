@@ -35,8 +35,12 @@
                     <li>
                         <br>
                         <strong>Flight Number:</strong> {{ flight.flight_number or 'UNKNOWN' }} <br>
-                        <strong>Departure Airport:</strong> {{ flight.departure_airport }} <br>
-                        <strong>Arrival Airport:</strong> {{ flight.arrival_airport }} <br>
+                        <strong>From:</strong>
+                        {{ flight.departure_code }}{% if flight.departure_city %} &mdash; {{ flight.departure_city }}{% endif %}{% if flight.departure_name %} ({{ flight.departure_name }}){% endif %}
+                        <br>
+                        <strong>To:</strong>
+                        {{ flight.arrival_code }}{% if flight.arrival_city %} &mdash; {{ flight.arrival_city }}{% endif %}{% if flight.arrival_name %} ({{ flight.arrival_name }}){% endif %}
+                        <br>
                         <strong>Departure Time:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M UTC') if flight.departure_time else 'N/A' }} <br>
                         <strong>Arrival Time:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M UTC') if flight.arrival_time else 'N/A' }} <br>
                         <br>

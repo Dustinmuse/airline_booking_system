@@ -1,12 +1,12 @@
 # Airline Booking System
 
-A web-based airline booking system featuring a Flask (Python) backend, PostgreSQL database, and a modern HTML/CSS/JavaScript frontend. Integrates live flight data using the OpenSky API.
+A web-based airline booking system featuring a Flask (Python) backend, PostgreSQL database, and a modern HTML/CSS/JavaScript frontend. Real-world airport data is sourced from the [OurAirports](https://github.com/davidmegginson/ourairports-data) open dataset, with a synthetic flight schedule generated on top of those airports.
 
 ## Key Features
 
 - User registration and login (Flask backend)
 - Book flights and select seats
-- View available flights (live data from OpenSky, backend integration)
+- View available flights (real airports from OurAirports + synthetic schedule)
 - View current and past bookings
 - Responsive UI (HTML/CSS/JavaScript)
 - RESTful API endpoints
@@ -16,7 +16,7 @@ A web-based airline booking system featuring a Flask (Python) backend, PostgreSQ
 - **Backend:** Python 3.8+, Flask
 - **Frontend:** HTML, CSS, JavaScript (Jinja2 templates)
 - **Database:** PostgreSQL
-- **External API:** OpenSky Network API
+- **Airport data:** [OurAirports CSV](https://davidmegginson.github.io/ourairports-data/airports.csv)
 
 ## Project Structure
 
@@ -29,12 +29,14 @@ A web-based airline booking system featuring a Flask (Python) backend, PostgreSQ
 ## Setup Instructions
 
 1. **Clone the repository**
+
    ```
    git clone https://github.com/yourusername/airline_booking_system.git
    cd airline_booking_system
    ```
 
 2. **Install dependencies**
+
    ```
    pip install -r requirements.txt
    ```
@@ -44,32 +46,49 @@ A web-based airline booking system featuring a Flask (Python) backend, PostgreSQ
      ```
      DATABASE_URL=postgresql://username:password@localhost:5432/yourdbname
      SECRET_KEY=your_secret_key
-     # Optional: set to 1/true/yes to skip the background OpenSky seed at boot
-     SKIP_OPENSKY_SEED=
-     # Optional: shared secret required by POST /admin/refresh_flights via the
+     # Optional: set to 1/true/yes to skip the background data seed at boot
+     SKIP_DATA_SEED=
+     # Optional: shared secret required by POST /admin/refresh_data via the
      # X-Admin-Token header. Leave unset to disable the admin endpoint.
      ADMIN_TOKEN=
      ```
 
-### Flight data and OpenSky
+### Flight data
 
-`/available_flights` reads exclusively from the local `flights` table — it never
-calls OpenSky on the request path, so the page stays fast even if the OpenSky
-API is unreachable (which is common from cloud-provider IP ranges).
+`/available_flights` reads exclusively from the local `flights` table — the
+data fetch happens in a background seeder, never on the request path, so the
+page stays fast and responsive.
 
-The `flights` table is populated by:
+The data is sourced from the [OurAirports](https://github.com/davidmegginson/ourairports-data)
+open dataset, which publishes a daily-refreshed CSV of every airport in the
+world (name, city, country, IATA/ICAO codes, lat/lon, type). On boot the app:
 
-- A best-effort daemon-thread seed that runs once at app boot. Failures are
-  logged via `app.logger.warning` and never block startup.
-- An admin endpoint to re-seed on demand:
-  ```
-  curl -X POST -H "X-Admin-Token: $ADMIN_TOKEN" \
-       https://your-host/admin/refresh_flights
-  ```
-  Returns `{"ok": true, "inserted": N}` on success.
+1. Downloads `https://davidmegginson.github.io/ourairports-data/airports.csv`.
+2. Filters to large/medium airports that publish an IATA or ICAO code, and
+   upserts them into the `airports` table.
+3. If the `flights` table has fewer than 50 rows, generates a synthetic
+   schedule of ~200 flights by pairing random airports with realistic flight
+   numbers (real airline IATA prefixes), departure times spread over the next
+   30 days, and durations approximated from the great-circle distance.
 
-Set `SKIP_OPENSKY_SEED=1` to disable the boot-time seed entirely (useful for
-local development or when OpenSky is known to be down).
+Note that OurAirports does not publish flight schedules — only airport data.
+The schedule on top is intentionally synthetic so the booking flow has data
+to work with.
+
+The seed is best-effort: it runs in a daemon thread at app boot and any
+failure is logged via `app.logger.warning` without blocking startup. To
+re-seed on demand:
+
+```
+curl -X POST -H "X-Admin-Token: $ADMIN_TOKEN" \
+     https://your-host/admin/refresh_data
+```
+
+Append `?force_flights=1` to also regenerate the synthetic schedule even when
+flights already exist. Returns `{"ok": true, ...}` on success.
+
+Set `SKIP_DATA_SEED=1` to disable the boot-time seed entirely (useful for
+local development or offline work).
 
 4. **Set up the PostgreSQL database**
    - Make sure PostgreSQL is running and your database is created.
@@ -96,4 +115,4 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ---
 
-*This project uses PostgreSQL for data storage. Make sure to update your `.env` with the correct `DATABASE_URL` and `SECRET_KEY`.*
+_This project uses PostgreSQL for data storage. Make sure to update your `.env` with the correct `DATABASE_URL` and `SECRET_KEY`._
